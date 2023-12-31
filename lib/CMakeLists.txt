@@ -8,3 +8,6 @@ set(SD_CUBLAS ON)
 add_subdirectory(sd)
 target_link_libraries(lib INTERFACE stable-diffusion)
 target_include_directories(lib INTERFACE sd)
+
+# stb
+target_include_directories(lib INTERFACE stb)

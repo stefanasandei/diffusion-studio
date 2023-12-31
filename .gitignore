@@ -1,0 +1,13 @@
+.idea
+.vscode
+
+cmake-build-debug
+bin
+build
+
+./res/shaders/compiled
+*.spv
+
+imgui.ini
+
+*.safetensors

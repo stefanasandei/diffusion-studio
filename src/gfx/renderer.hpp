@@ -19,6 +19,8 @@ struct FrameData {
   vk::Semaphore SwapchainSemaphore, RenderSemaphore;
   vk::Fence RenderFence;
 
+  vk::DescriptorSet ImageSet;
+
   memory::DeletionQueue DeletionQueue;
   DescriptorAllocator Descriptors;
 };
@@ -41,9 +43,11 @@ class Renderer {
   void InitVma();
   void InitDrawTarget();
   void InitDescriptors();
+  void InitPipelines();
 
   void DrawBackground(vk::CommandBuffer cmd, vk::Image target);
-    void DrawImGui(vk::CommandBuffer cmd, vk::ImageView target);
+  void DrawImGui(vk::CommandBuffer cmd, vk::ImageView target);
+  void PostProcess(vk::CommandBuffer cmd);
 
   void Resize();
 
@@ -59,8 +63,10 @@ class Renderer {
 
   AllocatedImage m_DrawImage;
 
-  vk::DescriptorSetLayout m_ImageDescriptorLayout;
-  vk::DescriptorSet m_ImageSet;
+  vk::PipelineLayout m_PostProcessPipelineLayout;
+  vk::Pipeline m_PostProcessPipeline;
+
+  vk::DescriptorSetLayout m_DrawImageDescriptorLayout;
 };
 
 }  // namespace gfx

@@ -1,20 +1,8 @@
-#include "global.hpp"
+#include "app/application.hpp"
 
-int main() {
-  init_globals();
+int main(int argc, char* argv[]) {
+  std::vector<std::string_view> args(argv, argv + argc);
+  auto app = std::make_unique<DiffusionStudio::Application>(args);
 
-  while (!global.window->ShouldClose()) {
-    global.window->PollEvents();
-
-    global.imgui->AddPanel([&]() {
-      ImGui::Begin("Control Panel");
-
-      ImGui::End();
-    });
-
-    global.imgui->Draw();
-    global.renderer->Draw();
-  }
-
-  return 0;
+  return app->Run();
 }

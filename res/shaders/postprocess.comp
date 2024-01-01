@@ -1,0 +1,23 @@
+#version 460
+
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout(rgba16f, set = 0, binding = 0) uniform image2D image;
+
+vec4 postprocess(vec4 color) {
+    float gamma = 0.6;
+    vec3 corrected = pow(color.rgb, vec3(1.0 / gamma));
+
+    return vec4(corrected, 1.0);
+}
+
+void main() {
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(image);
+
+    if(texelCoord.x < size.x && texelCoord.y < size.y) {
+        vec4 color = imageLoad(image, texelCoord);
+
+        imageStore(image, texelCoord, postprocess(color));
+    }
+}

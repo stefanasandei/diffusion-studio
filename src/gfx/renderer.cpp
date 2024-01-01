@@ -23,6 +23,7 @@ Renderer::Renderer() {
   InitVma();
   InitDrawTarget();
   InitDescriptors();
+  InitPipelines();
 
   m_StartTime = std::chrono::high_resolution_clock::now();
 }
@@ -84,8 +85,9 @@ void Renderer::Draw() {
 
   DrawBackground(GetFrame().MainCmdBuffer, m_DrawImage.Image);
 
-    TransitionImage(GetFrame().MainCmdBuffer, m_DrawImage.Image,
-                    vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
+  TransitionImage(GetFrame().MainCmdBuffer, m_DrawImage.Image,
+                  vk::ImageLayout::eGeneral,
+                  vk::ImageLayout::eTransferSrcOptimal);
 
   TransitionImage(GetFrame().MainCmdBuffer, current_img,
                   vk::ImageLayout::eUndefined,
@@ -100,8 +102,36 @@ void Renderer::Draw() {
 
   DrawImGui(GetFrame().MainCmdBuffer, current_img_view);
 
+  TransitionImage(GetFrame().MainCmdBuffer, m_DrawImage.Image,
+                  vk::ImageLayout::eTransferSrcOptimal,
+                  vk::ImageLayout::eTransferDstOptimal);
+
   TransitionImage(GetFrame().MainCmdBuffer, current_img,
                   vk::ImageLayout::eColorAttachmentOptimal,
+                  vk::ImageLayout::eTransferSrcOptimal);
+
+  CopyImageToImage(GetFrame().MainCmdBuffer, current_img, m_DrawImage.Image,
+                   m_DrawImage.Extent);
+
+  TransitionImage(GetFrame().MainCmdBuffer, m_DrawImage.Image,
+                  vk::ImageLayout::eTransferDstOptimal,
+                  vk::ImageLayout::eGeneral);
+
+  PostProcess(GetFrame().MainCmdBuffer);
+
+  TransitionImage(GetFrame().MainCmdBuffer, m_DrawImage.Image,
+                  vk::ImageLayout::eGeneral,
+                  vk::ImageLayout::eTransferSrcOptimal);
+
+  TransitionImage(GetFrame().MainCmdBuffer, current_img,
+                  vk::ImageLayout::eTransferSrcOptimal,
+                  vk::ImageLayout::eTransferDstOptimal);
+
+  CopyImageToImage(GetFrame().MainCmdBuffer, m_DrawImage.Image, current_img,
+                   m_DrawImage.Extent);
+
+  TransitionImage(GetFrame().MainCmdBuffer, current_img,
+                  vk::ImageLayout::eTransferDstOptimal,
                   vk::ImageLayout::ePresentSrcKHR);
 
   // close the command buffer
@@ -162,6 +192,17 @@ void Renderer::DrawBackground(vk::CommandBuffer cmd, vk::Image target) {
 
   cmd.clearColorImage(target, vk::ImageLayout::eGeneral, &clearValue, 1,
                       &clearRange);
+}
+
+void Renderer::PostProcess(vk::CommandBuffer cmd) {
+  cmd.bindPipeline(vk::PipelineBindPoint::eCompute, m_PostProcessPipeline);
+
+  cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+                         m_PostProcessPipelineLayout, 0, 1, &GetFrame().ImageSet, 0,
+                         nullptr);
+
+  cmd.dispatch(std::ceil(m_DrawImage.Extent.width / 16.0),
+               std::ceil(m_DrawImage.Extent.height / 16.0), 1);
 }
 
 void Renderer::InitCommands() {
@@ -299,10 +340,46 @@ void Renderer::DrawImGui(vk::CommandBuffer cmd, vk::ImageView target) {
   cmd.endRendering();
 }
 
-// not used atm
+void Renderer::InitPipelines() {
+  vk::PipelineLayoutCreateInfo compute_info;
+  compute_info.setSetLayoutCount(1);
+  compute_info.setPSetLayouts(&m_DrawImageDescriptorLayout);
+
+  VK_CHECK(global.context->Device.createPipelineLayout(
+      &compute_info, nullptr, &m_PostProcessPipelineLayout));
+
+  vk::ShaderModule compute_draw_shader;
+  LoadShaderModule("../res/shaders/compiled/postprocess.spv",
+                   global.context->Device, &compute_draw_shader);
+
+  vk::PipelineShaderStageCreateInfo stage_info;
+  stage_info.setStage(vk::ShaderStageFlagBits::eCompute);
+  stage_info.setModule(compute_draw_shader);
+  stage_info.setPName("main");
+
+  vk::ComputePipelineCreateInfo compute_pipeline_info;
+  compute_pipeline_info.setLayout(m_PostProcessPipelineLayout);
+  compute_pipeline_info.setStage(stage_info);
+
+  VK_CHECK(global.context->Device.createComputePipelines(
+      VK_NULL_HANDLE, 1, &compute_pipeline_info, nullptr,
+      &m_PostProcessPipeline));
+
+  global.context->Device.destroyShaderModule(compute_draw_shader);
+
+  global.context->DeletionQueue.Push([&]() {
+    global.context->Device.destroyPipelineLayout(m_PostProcessPipelineLayout);
+    global.context->Device.destroyPipeline(m_PostProcessPipeline);
+  });
+}
+
 void Renderer::InitDescriptors() {
+  DescriptorLayoutBuilder builder;
+  builder.add_binding(0, vk::DescriptorType::eStorageImage);
+  m_DrawImageDescriptorLayout =
+      builder.build(global.context->Device, vk::ShaderStageFlagBits::eCompute);
+
   for (int i = 0; i < FRAME_COUNT; i++) {
-    // create a descriptor pool
     std::vector<PoolSizeRatio> frame_sizes = {
         {vk::DescriptorType::eStorageImage, 3},
         {vk::DescriptorType::eStorageBuffer, 3},
@@ -312,15 +389,17 @@ void Renderer::InitDescriptors() {
 
     m_Frames[i].Descriptors.Init(global.context->Device, 1000, frame_sizes);
 
+    m_Frames[i].ImageSet = m_Frames[i].Descriptors.Allocate(m_DrawImageDescriptorLayout);
+
+    DescriptorWriter writer;
+    writer.WriteImage(0, m_DrawImage.View, VK_NULL_HANDLE,
+                      vk::ImageLayout::eGeneral,
+                      vk::DescriptorType::eStorageImage);
+
+    writer.UpdateSet(global.context->Device, m_Frames[i].ImageSet);
+
     m_Frames[i].DeletionQueue.Push(
         [&, i]() { m_Frames[i].Descriptors.DestroyPools(); });
-  }
-
-  {
-    DescriptorLayoutBuilder builder;
-    builder.add_binding(0, vk::DescriptorType::eCombinedImageSampler);
-    m_ImageDescriptorLayout = builder.build(global.context->Device,
-                                            vk::ShaderStageFlagBits::eFragment);
   }
 }
 
@@ -333,6 +412,15 @@ void Renderer::Resize() {
   m_DrawImage.Destroy();
 
   InitDrawTarget();
+
+  for (int i = 0; i < FRAME_COUNT; i++) {
+    DescriptorWriter writer;
+    writer.WriteImage(0, m_DrawImage.View, VK_NULL_HANDLE,
+                      vk::ImageLayout::eGeneral,
+                      vk::DescriptorType::eStorageImage);
+
+    writer.UpdateSet(global.context->Device, m_Frames[i].ImageSet);
+  }
 }
 
 float Renderer::GetFPS() const {

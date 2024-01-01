@@ -14,3 +14,4 @@
 #include <filesystem>
 #include <chrono>
 #include <print>
+#include <span>

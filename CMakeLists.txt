@@ -33,7 +33,9 @@ add_executable(diffusion_studio src/main.cpp
         src/gfx/descriptors.cpp
         src/gfx/image.hpp
         src/gfx/image.cpp
-        src/gfx/stb_impl.cpp)
+        src/gfx/stb_impl.cpp
+        src/app/application.hpp
+        src/app/application.cpp)
 
 add_subdirectory(lib)
 

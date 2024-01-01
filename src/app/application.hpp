@@ -6,6 +6,9 @@
 
 #include "util/std.hpp"
 
+#include "app/panels/panel.hpp"
+#include "app/panels/create_panel.hpp"
+
 namespace DiffusionStudio {
 
 class Application {
@@ -17,7 +20,12 @@ class Application {
 
  private:
   void DrawDockingSpace() const;
-  void DrawMainMenu() const;
+  void DrawMainMenu();
+
+ private:
+  CreatePanel m_CreatePanel;
+
+  bool m_IsRunning = true;
 };
 
-}  // namespace
+}  // namespace DiffusionStudio

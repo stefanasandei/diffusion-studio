@@ -8,28 +8,18 @@
 
 namespace DiffusionStudio {
 
-
-Application::Application(std::span<std::string_view> args) {
-  init_globals();
-}
+Application::Application(std::span<std::string_view> args) { init_globals(); }
 
 Application::~Application() = default;
 
 int32_t Application::Run() {
-  while (!global.window->ShouldClose()) {
+  while (!global.window->ShouldClose() && m_IsRunning) {
     global.window->PollEvents();
 
     DrawDockingSpace();
     DrawMainMenu();
 
-    global.imgui->AddPanel([&]() {
-      ImGui::Begin("Control Panel");
-
-      if (ImGui::Button("Imagine")) {
-      }
-
-      ImGui::End();
-    });
+    global.imgui->AddPanel([&]() { m_CreatePanel.Draw(); });
 
     global.imgui->Draw();
     global.renderer->Draw();
@@ -38,7 +28,7 @@ int32_t Application::Run() {
   return 0;
 }
 
-void Application::DrawMainMenu() const {
+void Application::DrawMainMenu() {
   global.imgui->AddPanel([&]() {
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
@@ -51,6 +41,7 @@ void Application::DrawMainMenu() const {
         if (ImGui::MenuItem("Settings")) {
         }
         if (ImGui::MenuItem("Exit")) {
+          m_IsRunning = false;
         }
         ImGui::EndMenu();
       }

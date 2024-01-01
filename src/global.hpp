@@ -11,6 +11,8 @@
 #include "gfx/renderer.hpp"
 #include "gfx/imgui_layer.hpp"
 
+#include "dl/sdinstance.hpp"
+
 void init_globals();
 
 struct Global {
@@ -20,6 +22,8 @@ struct Global {
   std::unique_ptr<gfx::Swapchain> swapchain;
   std::unique_ptr<gfx::Renderer> renderer;
   std::unique_ptr<gfx::ImGUILayer> imgui;
+
+  std::unique_ptr<dl::StableDiffusionInstance> sd;
 };
 
 extern Global& global;

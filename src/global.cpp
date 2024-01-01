@@ -18,4 +18,7 @@ void init_globals() {
   global.renderer = std::make_unique<gfx::Renderer>();
 
   global.imgui = std::make_unique<gfx::ImGUILayer>();
+
+  global.sd = std::make_unique<dl::StableDiffusionInstance>();
 }
+

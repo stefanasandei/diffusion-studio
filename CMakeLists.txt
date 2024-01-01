@@ -41,7 +41,9 @@ add_executable(diffusion_studio src/main.cpp
         src/dl/sdinstance.hpp
         src/app/panels/create_panel.hpp
         src/app/panels/create_panel.hpp
-        src/app/panels/create_panel.cpp)
+        src/app/panels/create_panel.cpp
+        src/dl/diffusionmodel.cpp
+        src/app/panels/preview_panel.cpp)
 
 add_subdirectory(lib)
 

@@ -6,9 +6,25 @@
 
 #include "global.hpp"
 
+#include "gfx/image.hpp"
+
+#include <stb_image.h>
+
 namespace DiffusionStudio {
 
-Application::Application(std::span<std::string_view> args) { init_globals(); }
+Application::Application(std::span<std::string_view> args) {
+  init_globals();
+
+  // test usage only
+  int width, height, comp;
+  uint8_t* data = stbi_load("output-8.png", &width, &height, &comp, 4);
+
+  gfx::AllocatedImage img = gfx::CreateImage(data, {width, height}, vk::Format::eR8G8B8A8Unorm, VK_IMAGE_USAGE_SAMPLED_BIT);
+
+  auto imageSet = global.imgui->UploadImage(img);
+
+  m_PreviewPanel.SetPreviewImage(imageSet);
+}
 
 Application::~Application() = default;
 
@@ -20,6 +36,7 @@ int32_t Application::Run() {
     DrawMainMenu();
 
     global.imgui->AddPanel([&]() { m_CreatePanel.Draw(); });
+    global.imgui->AddPanel([&]() { m_PreviewPanel.Draw(); });
 
     global.imgui->Draw();
     global.renderer->Draw();

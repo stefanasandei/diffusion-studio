@@ -6,6 +6,8 @@
 
 #include "util/util.hpp"
 
+#include <stable-diffusion.h>
+
 namespace dl {
 
 struct DiffusionModelProps {
@@ -16,8 +18,13 @@ struct DiffusionModelProps {
 
 class DiffusionModel {
  public:
-  DiffusionModel(const DiffusionModelProps& props) {}
-  ~DiffusionModel() {}
+  explicit DiffusionModel(const DiffusionModelProps& props);
+  ~DiffusionModel();
+
+  uint8_t* Generate(const std::string& prompt);
+
+ private:
+  StableDiffusion m_TempSD;
 };
 
-}
+}  // namespace dl

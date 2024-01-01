@@ -8,6 +8,7 @@
 
 #include "app/panels/panel.hpp"
 #include "app/panels/create_panel.hpp"
+#include "app/panels/preview_panel.hpp"
 
 namespace DiffusionStudio {
 
@@ -24,6 +25,7 @@ class Application {
 
  private:
   CreatePanel m_CreatePanel;
+  PreviewPanel m_PreviewPanel;
 
   bool m_IsRunning = true;
 };

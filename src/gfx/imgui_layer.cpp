@@ -13,7 +13,7 @@ namespace gfx {
 
 ImGUILayer::ImGUILayer() { init(); }
 
-ImGUILayer::~ImGUILayer() {}
+ImGUILayer::~ImGUILayer() = default;
 
 void ImGUILayer::init() {
   VkDescriptorPoolSize pool_sizes[] = {
@@ -36,9 +36,8 @@ void ImGUILayer::init() {
   pool_info.setPPoolSizes(
       reinterpret_cast<const vk::DescriptorPoolSize*>(pool_sizes));
 
-  vk::DescriptorPool imgui_pool;
   VK_CHECK(global.context->Device.createDescriptorPool(&pool_info, nullptr,
-                                                       &imgui_pool));
+                                                       &m_Pool));
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -55,7 +54,7 @@ void ImGUILayer::init() {
   init_info.PhysicalDevice = global.context->PhysicalDevice;
   init_info.Device = global.context->Device;
   init_info.Queue = global.context->GraphicsQueue;
-  init_info.DescriptorPool = imgui_pool;
+  init_info.DescriptorPool = m_Pool;
   init_info.MinImageCount = 3;
   init_info.ImageCount = 3;
   init_info.UseDynamicRendering = true;
@@ -83,6 +82,19 @@ void ImGUILayer::Draw() {
   m_Panels.clear();
 
   ImGui::Render();
+}
+
+vk::DescriptorSet ImGUILayer::UploadImage(const AllocatedImage& img) {
+  vk::SamplerCreateInfo info;
+  info.setMinFilter(vk::Filter::eLinear);
+  info.setMagFilter(vk::Filter::eLinear);
+  vk::Sampler sampler;
+
+  VK_CHECK(global.context->Device.createSampler(&info, nullptr, &sampler));
+
+  vk::DescriptorSet set = ImGui_ImplVulkan_AddTexture(sampler, img.View, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+  return set;
 }
 
 }  // namespace gfx

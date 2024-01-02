@@ -13,14 +13,22 @@ namespace dl {
 
 class StableDiffusionInstance {
  public:
-  StableDiffusionInstance() {}
-  ~StableDiffusionInstance() {}
+  StableDiffusionInstance();
+  ~StableDiffusionInstance();
 
-  void AddModel() {}
-  std::experimental::generator<uint8_t*> Generate() {}
+  void AddModel(const std::function<void()>& callback);
+
+  void Generate(const std::string& prompt, const std::function<void(uint8_t*)>& callback);
 
  private:
-  std::unordered_map<std::string, DiffusionModel> m_Models;
+  void DiffusionThread(util::ThreadSafeQueue<std::function<void()>>& tasks) const;
+
+ private:
+  std::thread m_DiffusionThread;
+  util::ThreadSafeQueue<std::function<void()>> m_Tasks;
+  bool m_Working = true;
+
+  std::unordered_map<std::string, std::shared_ptr<DiffusionModel>> m_Models;
 };
 
 }  // namespace dl

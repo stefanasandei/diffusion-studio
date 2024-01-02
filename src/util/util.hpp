@@ -9,3 +9,4 @@
 
 #include "util/std.hpp"
 #include "util/error.hpp"
+#include "util/safe_queue.hpp"

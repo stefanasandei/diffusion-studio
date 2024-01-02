@@ -24,6 +24,10 @@ Application::Application(std::span<std::string_view> args) {
   auto imageSet = global.imgui->UploadImage(img);
 
   m_PreviewPanel.SetPreviewImage(imageSet);
+
+  m_CreatePanel.SetGenerationCallback([=](uint8_t* data) {
+    UpdateImageData(data, img);
+  });
 }
 
 Application::~Application() = default;

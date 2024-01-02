@@ -18,10 +18,11 @@ struct DiffusionModelProps {
 
 class DiffusionModel {
  public:
+  DiffusionModel() = default;
   explicit DiffusionModel(const DiffusionModelProps& props);
   ~DiffusionModel();
 
-  uint8_t* Generate(const std::string& prompt);
+  std::experimental::generator<uint8_t*> Generate(std::string prompt);
 
  private:
   StableDiffusion m_TempSD;

@@ -43,7 +43,11 @@ add_executable(diffusion_studio src/main.cpp
         src/app/panels/create_panel.hpp
         src/app/panels/create_panel.cpp
         src/dl/diffusionmodel.cpp
-        src/app/panels/preview_panel.cpp)
+        src/app/panels/preview_panel.cpp
+        src/dl/sdinstance.cpp
+        src/util/safe_queue.hpp
+        src/gfx/imgui_stdlib.hpp
+        src/gfx/imgui_stdlib.cpp)
 
 add_subdirectory(lib)
 

@@ -45,6 +45,9 @@ Renderer::~Renderer() {
 }
 
 void Renderer::Draw() {
+  if(global.window->IsMinimized())
+    return;
+
   // wait & reset the fence
   VK_CHECK(global.context->Device.waitForFences(1, &GetFrame().RenderFence,
                                                 true, 1000000000));

@@ -15,6 +15,7 @@ class Window {
 
   void PollEvents() const;
   [[nodiscard]] bool ShouldClose() const;
+  [[nodiscard]] static bool IsMinimized();
 
   GLFWwindow* GetNative();
   glm::ivec2 GetSize();

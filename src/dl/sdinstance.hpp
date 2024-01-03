@@ -21,7 +21,7 @@ class StableDiffusionInstance {
   void Generate(const std::string& prompt, const std::function<void(uint8_t*)>& callback);
 
  private:
-  void DiffusionThread(util::ThreadSafeQueue<std::function<void()>>& tasks) const;
+  void DiffusionThread(util::ThreadSafeQueue<std::function<void()>>& tasks);
 
  private:
   std::thread m_DiffusionThread;

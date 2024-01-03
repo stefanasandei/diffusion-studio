@@ -14,6 +14,7 @@ StableDiffusionInstance::StableDiffusionInstance() {
 StableDiffusionInstance::~StableDiffusionInstance() {
   if (m_DiffusionThread.joinable()) {
     m_Working = false;
+    m_Tasks.GetItemAdded().notify_all();
     m_DiffusionThread.join();
   }
 }
@@ -33,9 +34,15 @@ void StableDiffusionInstance::AddModel(const std::function<void()>& callback) {
 }
 
 void StableDiffusionInstance::DiffusionThread(
-    util::ThreadSafeQueue<std::function<void()>>& tasks) const {
+    util::ThreadSafeQueue<std::function<void()>>& tasks) {
   while (m_Working) {
-    // todo: use a cv
+    {
+      std::unique_lock<std::mutex> lock(const_cast<std::mutex&>(m_Tasks.GetItemsMutex()));
+      m_Tasks.GetItemAdded().wait(lock, [&, this]() {
+        return !m_Working || tasks.GetSize() > 0;
+      });
+    }
+
     std::function<void()> task;
     if (tasks.TryPop(task)) {
       task();

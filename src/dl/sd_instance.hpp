@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "dl/diffusionmodel.hpp"
+#include "dl/diffusion_model.hpp"
 #include "util/util.hpp"
 
 #include <experimental/generator>
@@ -26,6 +26,9 @@ class StableDiffusionInstance {
  private:
   std::thread m_DiffusionThread;
   util::ThreadSafeQueue<std::function<void()>> m_Tasks;
+  std::vector<std::future<void>> m_PendingFutures;
+  std::mutex m_DecodingMutex;
+
   bool m_Working = true;
 
   std::unordered_map<std::string, std::shared_ptr<DiffusionModel>> m_Models;

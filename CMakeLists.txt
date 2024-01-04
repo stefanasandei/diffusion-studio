@@ -36,18 +36,19 @@ add_executable(diffusion_studio src/main.cpp
         src/gfx/stb_impl.cpp
         src/app/application.hpp
         src/app/application.cpp
-        src/dl/diffusionmodel.hpp
+        src/dl/diffusion_model.hpp
         src/app/panels/panel.hpp
-        src/dl/sdinstance.hpp
+        src/dl/sd_instance.hpp
         src/app/panels/create_panel.hpp
         src/app/panels/create_panel.hpp
         src/app/panels/create_panel.cpp
-        src/dl/diffusionmodel.cpp
+        src/dl/diffusion_model.cpp
         src/app/panels/preview_panel.cpp
-        src/dl/sdinstance.cpp
+        src/dl/sd_instance.cpp
         src/util/safe_queue.hpp
         src/gfx/imgui_stdlib.hpp
-        src/gfx/imgui_stdlib.cpp)
+        src/gfx/imgui_stdlib.cpp
+        src/dl/sd_ggml.hpp)
 
 add_subdirectory(lib)
 

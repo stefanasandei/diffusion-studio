@@ -11,7 +11,7 @@
 #include "gfx/renderer.hpp"
 #include "gfx/imgui_layer.hpp"
 
-#include "dl/sdinstance.hpp"
+#include "dl/sd_instance.hpp"
 
 void init_globals();
 

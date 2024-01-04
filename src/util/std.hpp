@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include <fstream>
 #include <functional>
 #include <deque>
 #include <optional>
@@ -19,5 +20,12 @@
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <sstream>
+#include <istream>
+#include <iterator>
+#include <regex>
+#include <set>
+#include <bitset>
+#include <future>
 
 #include <experimental/generator>

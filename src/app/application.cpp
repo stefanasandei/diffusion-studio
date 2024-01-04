@@ -27,6 +27,7 @@ Application::Application(std::span<std::string_view> args) {
 
   m_CreatePanel.SetGenerationCallback([=](uint8_t* data) {
     UpdateImageData(data, img);
+    delete[] data;
   });
 }
 

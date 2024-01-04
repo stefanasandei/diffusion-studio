@@ -2,7 +2,9 @@
 // Created by Stefan on 1/2/2024.
 //
 
-#include "dl/sdinstance.hpp"
+#include "dl/sd_instance.hpp"
+
+#include <ggml/ggml.h>
 
 namespace dl {
 
@@ -53,9 +55,19 @@ void StableDiffusionInstance::DiffusionThread(
 void StableDiffusionInstance::Generate(
     const std::string& prompt, const std::function<void(uint8_t*)>& callback) {
   m_Tasks.Push([=, this]() {
-    for (uint8_t* sample :
-         m_Models["a"]->Generate(prompt) | std::views::take(20)) {
-      callback(sample);
+    int steps = 20;
+
+    for (ggml_tensor* sample :
+         m_Models["a"]->Generate(prompt) | std::views::take(steps + 1)) {
+
+      std::future<void> res = std::async(std::launch::async, [=, this]() {
+        std::lock_guard<std::mutex> lock(m_DecodingMutex);
+
+        uint8_t* image = m_Models["a"]->ExtractSample(sample);
+        callback(image);
+      });
+
+      m_PendingFutures.push_back(std::move(res)); // TODO not really fully async
     }
   });
 }

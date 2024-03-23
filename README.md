@@ -1,6 +1,6 @@
 # Diffusion Studio
 
-![img.png](https://media.discordapp.net/attachments/833285965019217980/1191728382006788106/image.png)
+![image](https://i.ibb.co/mD9BQ7h/imagfdsgdfge.png)
 
 A *work in progress* app to create content using generative AI.
 

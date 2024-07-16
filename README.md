@@ -1,6 +1,6 @@
 # Diffusion Studio
 
-![image](https://i.ibb.co/mD9BQ7h/imagfdsgdfge.png)
+![image](./res/screenshot.webp)
 
 A *work in progress* app to create content using generative AI.
 

@@ -28,6 +28,8 @@ class DiffusionModel {
   std::experimental::generator<ggml_tensor*> Generate(std::string prompt);
   uint8_t* ExtractSample(ggml_tensor* sample);
 
+  void CleanGeneration();
+
  private:
   ggml_tensor* Decode(ggml_context* work_ctx, ggml_tensor* input);
   uint8_t* Upscale(ggml_tensor* image);
@@ -42,6 +44,7 @@ class DiffusionModel {
   std::shared_ptr<StableDiffusionGGML> m_StableDiffusionGGMLBackend;
 
   ggml_tensor* m_SampleCopy;
+  ggml_context* m_WorkContext;
 };
 
 }  // namespace dl

@@ -26,8 +26,7 @@ void StableDiffusionInstance::AddModel(const std::function<void()>& callback) {
   m_Tasks.Push([&, callback]() {
     m_Models["a"] = std::make_shared<DiffusionModel>(DiffusionModelProps{
         .Checkpoint =
-            "D:\\StableDiffusion\\stable-diffusion-webui\\models\\Stable-"
-            "diffusion\\v1-5-pruned-emaonly.safetensors",
+            R"(TODO_PATH)",
         .Loras = "",
         .VariationalAutoencoder = ""});
 
@@ -39,10 +38,10 @@ void StableDiffusionInstance::DiffusionThread(
     util::ThreadSafeQueue<std::function<void()>>& tasks) {
   while (m_Working) {
     {
-      std::unique_lock<std::mutex> lock(const_cast<std::mutex&>(m_Tasks.GetItemsMutex()));
-      m_Tasks.GetItemAdded().wait(lock, [&, this]() {
-        return !m_Working || tasks.GetSize() > 0;
-      });
+      std::unique_lock<std::mutex> lock(
+          const_cast<std::mutex&>(m_Tasks.GetItemsMutex()));
+      m_Tasks.GetItemAdded().wait(
+          lock, [&, this]() { return !m_Working || tasks.GetSize() > 0; });
     }
 
     std::function<void()> task;
@@ -54,21 +53,26 @@ void StableDiffusionInstance::DiffusionThread(
 
 void StableDiffusionInstance::Generate(
     const std::string& prompt, const std::function<void(uint8_t*)>& callback) {
+  m_PendingFutures.clear();
+  m_Models["a"]->CleanGeneration();
+
   m_Tasks.Push([=, this]() {
     int steps = 20;
+    ggml_tensor* s;
 
     for (ggml_tensor* sample :
          m_Models["a"]->Generate(prompt) | std::views::take(steps + 1)) {
-
-      std::future<void> res = std::async(std::launch::async, [=, this]() {
-        std::lock_guard<std::mutex> lock(m_DecodingMutex);
-
-        uint8_t* image = m_Models["a"]->ExtractSample(sample);
-        callback(image);
-      });
-
-      m_PendingFutures.push_back(std::move(res)); // TODO not really fully async
+      s = sample;
     }
+
+    //std::future<void> res = std::async(std::launch::async, [=, this]() {
+      //std::lock_guard<std::mutex> lock(m_DecodingMutex);
+
+      uint8_t* image = m_Models["a"]->ExtractSample(s);
+      callback(image);
+    //});
+
+    //m_PendingFutures.push_back(std::move(res));  // TODO not really fully async
   });
 }
 

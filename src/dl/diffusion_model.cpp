@@ -28,6 +28,8 @@ DiffusionModel::DiffusionModel(const DiffusionModelProps& props) {
 
 std::experimental::generator<ggml_tensor*> DiffusionModel::Generate(
     std::string prompt) {
+  CleanGeneration();
+
   std::string negative_prompt;
   float cfg_scale = 7.0f;
   int width = 512, height = 512;
@@ -54,8 +56,7 @@ std::experimental::generator<ggml_tensor*> DiffusionModel::Generate(
   ggml_context* work_ctx = ggml_init(params);
   util::error::ErrNDie(!work_ctx, "Failed to create a GGML work context.");
 
-  // ggml_context* work_sec_ctx = ggml_init(params);
-  // util::error::ErrNDie(!work_ctx, "Failed to create a GGML work context.");
+  m_WorkContext = work_ctx;
 
   auto [c, c_vector] = m_StableDiffusionGGMLBackend->get_learned_condition(
       work_ctx, prompt, width, height);
@@ -119,8 +120,6 @@ std::experimental::generator<ggml_tensor*> DiffusionModel::Generate(
                static_cast<float>(sampling_end - sampling_start) * 1.0f / 1000);
     std::cout << std::flush;
   }
-
-  // ggml_free(work_ctx); TODO
 }
 
 ggml_tensor* DiffusionModel::Decode(ggml_context* work_ctx,
@@ -156,8 +155,7 @@ uint8_t* DiffusionModel::ExtractSample(ggml_tensor* sample) {
 
   // apply the decoding and yield
   ggml_context* work_sec_ctx =
-      ggml_init({.mem_size = static_cast<size_t>(10 * 1024 * 1024) +
-                             512 * 512 * 3 * sizeof(float),
+      ggml_init({.mem_size = 1024 * 1024 * 3 * sizeof(float),
                  .mem_buffer = nullptr,
                  .no_alloc = false});
   util::error::ErrNDie(!work_sec_ctx, "Failed to create a GGML work context.");
@@ -357,8 +355,13 @@ std::experimental::generator<ggml_tensor*> DiffusionModel::Sample(
       break;
   }
 
-  //m_StableDiffusionGGMLBackend->diffusion_model.end();
+  // m_StableDiffusionGGMLBackend->diffusion_model.end();
   co_yield x;
+}
+
+void DiffusionModel::CleanGeneration() {
+  if (m_WorkContext != nullptr) ggml_free(m_WorkContext);
+  m_WorkContext = nullptr;
 }
 
 DiffusionModel::~DiffusionModel() = default;
